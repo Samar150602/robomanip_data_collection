@@ -46,8 +46,11 @@ setup(
             "mock_fairino_node = "
             "robomanip_data_collection.mock_fairino_node:main",
 
+            "mock_camera_node = "
+            "robomanip_data_collection.mock_camera_node:main",
+
             "episode_recorder = "
-            "robomanip_data_collection.episode_recorder:main"
+            "robomanip_data_collection.episode_recorder:main",
         ],
     },
 )
