@@ -1,6 +1,7 @@
 from pathlib import Path
 import shutil
 
+import csv
 import h5py
 import numpy as np
 import videoio
@@ -337,6 +338,105 @@ class EpisodeRecorder(Node):
             msg.height,
             msg.width,
         ).copy()
+
+    # ============================================================
+    # Write CSV
+    # ============================================================
+
+    def write_visualization_csv(
+        self,
+        episode_directory,
+    ):
+        """
+        Write robot joint positions and EEF poses to CSV.
+
+        This file is only for visualization/debugging.
+        It is not part of the RMB dataset format.
+        """
+
+        csv_path = (
+            episode_directory /
+            "robot_state.csv"
+        )
+
+        # ============================================================
+        # Column names
+        # ============================================================
+
+        header = ["time"]
+
+        # FR5 #1 joints
+        header += [
+            f"fr5_1_joint_{i}"
+            for i in range(1, 7)
+        ]
+
+        # FR5 #2 joints
+        header += [
+            f"fr5_2_joint_{i}"
+            for i in range(1, 7)
+        ]
+
+        # FR5 #1 EEF
+        header += [
+            "fr5_1_x",
+            "fr5_1_y",
+            "fr5_1_z",
+            "fr5_1_qw",
+            "fr5_1_qx",
+            "fr5_1_qy",
+            "fr5_1_qz",
+        ]
+
+        # FR5 #2 EEF
+        header += [
+            "fr5_2_x",
+            "fr5_2_y",
+            "fr5_2_z",
+            "fr5_2_qw",
+            "fr5_2_qx",
+            "fr5_2_qy",
+            "fr5_2_qz",
+        ]
+
+        with open(
+            csv_path,
+            "w",
+            newline="",
+        ) as csv_file:
+
+            writer = csv.writer(
+                csv_file
+            )
+
+            writer.writerow(
+                header
+            )
+
+            for (
+                time_value,
+                joint_pos,
+                eef_pose,
+            ) in zip(
+                self.time_data,
+                self.joint_pos_data,
+                self.eef_pose_data,
+            ):
+
+                row = (
+                    [time_value]
+                    + list(joint_pos)
+                    + list(eef_pose)
+                )
+
+                writer.writerow(
+                    row
+                )
+
+        self.get_logger().info(
+            f"Visualization CSV written: "
+            f"{csv_path}"
+    )
 
     # ================================================================
     # Start episode
@@ -1118,11 +1218,24 @@ class EpisodeRecorder(Node):
             depth2_array,
         )
 
+        # ============================================================
+        # Visualization CSV
+        #
+        # Not part of RMB format.
+        # Only for plotting/debugging.
+        # ============================================================
+
+        self.get_logger().info(
+            "Writing visualization CSV..."
+        )
+
+        self.write_visualization_csv(
+            episode_directory
+        )
+
         self.get_logger().info(
             "RMB Compact write complete"
         )
-
-
 # ====================================================================
 # Main
 # ====================================================================
